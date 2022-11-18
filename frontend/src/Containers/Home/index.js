@@ -12,6 +12,7 @@ import List from "@material-ui/core/List"
 import ListItem from "@material-ui/core/ListItem"
 import ListItemText from "@material-ui/core/ListItemText"
 import * as actions from "../../actions"
+import Recipe from "../Recipe"
 
 const ingredientList = ["flour", "sugar", "salt", "butter", "milk"]
 
@@ -27,7 +28,7 @@ class Home extends Component {
     }
   }
   fetchSearch() {
-    // TODO: something is missing here for fetching
+    this.props.searchRecipes(this.state.term, this.state.ingredients)
   }
   handleSearch(event) {
     const term = event.target.value
@@ -42,6 +43,9 @@ class Home extends Component {
       ingredients.splice(foundIngredient, 1)
     }
     this.setState({ ingredients })
+  }
+  loadRecipe(recipeId) {
+    this.props.loadRecipe(recipeId)
   }
   render() {
     const { term, ingredients } = this.state
@@ -75,7 +79,7 @@ class Home extends Component {
         {recipes && (
           <List>
             {recipes.map((recipe) => (
-              <ListItem key={recipe.id}>
+              <ListItem key={recipe.id} onClick={() => this.loadRecipe(recipe.id)}>
                 <ListItemText primary={recipe.name} />
               </ListItem>
             ))}
@@ -83,11 +87,7 @@ class Home extends Component {
         )}
         {isLoading && <LinearProgress />}
         <Divider />
-        {/*
-          TODO: Add a recipe component here.
-          I'm expecting you to have it return null or a component based on the redux state, not passing any props from here
-          I want to see how you wire up a component with connect and build actions.
-        */}
+        <Recipe></Recipe>
       </HomeWrapper>
     )
   }
@@ -102,6 +102,7 @@ const mapDispatchToProps = (dispatch) =>
   bindActionCreators(
     {
       searchRecipes: actions.searchRecipes,
+      loadRecipe: actions.loadRecipe
     },
     dispatch
   )
