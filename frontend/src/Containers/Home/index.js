@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom"
 import { connect } from "react-redux"
 import { bindActionCreators } from "redux"
 import { HomeWrapper, useStyles } from "./styles"
-import Input from "@material-ui/core/Input"
+import TextField from "@material-ui/core/Input"
 import Checkbox from "@material-ui/core/Checkbox"
 import FormControlLabel from "@material-ui/core/FormControlLabel"
 import Divider from "@material-ui/core/Divider"
@@ -12,6 +12,7 @@ import LinearProgress from "@material-ui/core/LinearProgress"
 import List from "@material-ui/core/List"
 import ListItem from "@material-ui/core/ListItem"
 import ListItemText from "@material-ui/core/ListItemText"
+import Typography from "@material-ui/core/Typography"
 import * as actions from "../../actions"
 import Recipe from "../Recipe"
 
@@ -65,6 +66,8 @@ function Home(props) {
   }, [state.selectedRecipeId])
 
   const handleSearchClick = () => {
+    setState({...state, selectedRecipeId: null})
+    props.clearRecipe()
     props.searchRecipes(state.term, state.ingredients)
   }
 
@@ -91,14 +94,15 @@ function Home(props) {
   const { recipes, isLoading } = props
   return (
     <HomeWrapper>
-      <Input
+      <TextField
         autoFocus={true}
         fullWidth={true}
         onChange={handleQueryChange}
         value={state.term}
+        placeholder="Enter search terms here"
       />
       <div>
-        <h3>Ingredients on hand</h3>
+        <Typography variant="subtitle1">Ingredients on hand:</Typography>
         {ingredientList.map((ingredient) => (
           <FormControlLabel
             key={ingredient}
@@ -118,7 +122,11 @@ function Home(props) {
       {recipes && (
         <List>
           {recipes.map((recipe) => (
-            <ListItem className={classes.listItem} key={recipe.id} onClick={() => handleRecipeClick(recipe.id)}>
+            <ListItem
+              className={`${classes.listItem} ${recipe.id === state.selectedRecipeId ? classes.selected : null}`}
+              key={recipe.id}
+              onClick={() => handleRecipeClick(recipe.id)}
+            >
               <ListItemText primary={recipe.name} />
             </ListItem>
           ))}
@@ -140,7 +148,8 @@ const mapDispatchToProps = (dispatch) =>
   bindActionCreators(
     {
       searchRecipes: actions.searchRecipes,
-      loadRecipe: actions.loadRecipe
+      loadRecipe: actions.loadRecipe,
+      clearRecipe: actions.clearRecipe,
     },
     dispatch
   )

@@ -1,6 +1,7 @@
 export const GET_RECIPE = "GET_RECIPE"
 export const RECEIVE_RECIPE = "RECEIVE_RECIPE"
 export const FAIL_RECIPE = "FAIL_RECIPE"
+export const CLEAR_RECIPE = "CLEAR_RECIPE"
 
 
 const fetchingRecipe = () => ({
@@ -17,6 +18,10 @@ const failedRecipe = (payload) => ({
   payload,
 })
 
+const clearingRecipe = () => ({
+  type: CLEAR_RECIPE,
+})
+
 export const executeLoadRecipe = async (recipeId) => {
   const response = await fetch(`/api/recipe/${recipeId}`, {
     method: "GET",
@@ -30,9 +35,13 @@ export const executeLoadRecipe = async (recipeId) => {
 
 export const loadRecipe = (recipeId) => {
   return (dispatch) => {
-    dispatch(fetchingRecipe)
+    dispatch(fetchingRecipe())
     return executeLoadRecipe(recipeId)
     .then((res) => dispatch(fetchedRecipe(res)))
     .catch((err) => dispatch(failedRecipe(err)))
   }
+}
+
+export const clearRecipe = () => {
+  return (dispatch) => dispatch(clearingRecipe())
 }

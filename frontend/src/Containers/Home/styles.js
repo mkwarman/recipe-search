@@ -8,14 +8,16 @@ export const HomeWrapper = styled.div`
   flex-flow: column;
   margin: auto;
   padding: 8px;
-  font-family: "Roboto", "Helvetica", "Arial", sans-serif
 `
 
 export const useStyles = makeStyles({
   listItem: {
     borderRadius: "5px",
     '&:hover': {
-      backgroundColor: "#EEE",
+      backgroundColor: "#DDDDDD",
     }
+  },
+  selected: {
+    backgroundColor: "#F0F0F0"
   }
 })
