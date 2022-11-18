@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react"
+import { useSearchParams } from "react-router-dom"
 import { connect } from "react-redux"
 import { bindActionCreators } from "redux"
-import { HomeWrapper } from "./styles"
+import { HomeWrapper, useStyles } from "./styles"
 import Input from "@material-ui/core/Input"
 import Checkbox from "@material-ui/core/Checkbox"
 import FormControlLabel from "@material-ui/core/FormControlLabel"
@@ -15,23 +16,64 @@ import * as actions from "../../actions"
 import Recipe from "../Recipe"
 
 const ingredientList = ["flour", "sugar", "salt", "butter", "milk"]
+const initialState = {
+  term: "",
+  ingredients: ["milk"],
+  selectedRecipeId: null,
+}
 
 function Home(props) {
-  const [state, setState] = useState({
-    term: "",
-    ingredients: ["milk"],
-  })
+  const [state, setState] = useState(initialState)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const classes = useStyles()
 
-  const fetchSearch = () => {
+  // Check for query params on load to persist state on refresh
+  useEffect(() =>{
+    if (Array.from(searchParams.keys()).length < 1) return
+
+    const loadedParams = {
+      term: searchParams.get("query") ?? initialState.term,
+      ingredients: searchParams.get("ingredients").split(",") ?? initialState.ingredients,
+      selectedRecipeId: searchParams.get("recipeId") ?? initialState.selectedRecipeId,
+    }
+
+    // Update the state with loaded info
+    setState(loadedParams);
+
+    // Automatically trigger search with loaded info if present
+    if (loadedParams.term && loadedParams.ingredients) {
+      props.searchRecipes(loadedParams.term, loadedParams.ingredients)
+    }
+  }, [])
+
+  // Load data into query params whenever they are updated
+  useEffect(() => {
+    const params = {}
+
+    if (state.term) params.query = state.term
+    if (state.ingredients) params.ingredients = state.ingredients.join(",")
+    if (state.selectedRecipeId) params.recipeId = state.selectedRecipeId
+
+    setSearchParams(params)
+  }, [state])
+
+  // Automatically load recipe whenever the selected recipe changes
+  useEffect(() => {
+    if (!state.selectedRecipeId) return
+
+    props.loadRecipe(state.selectedRecipeId)
+  }, [state.selectedRecipeId])
+
+  const handleSearchClick = () => {
     props.searchRecipes(state.term, state.ingredients)
   }
 
-  const handleSearch = (event) => {
+  const handleQueryChange = (event) => {
     const term = event.target.value
     setState({ ...state, term })
   }
 
-  const handleIngredient = (ingredient, event) => {
+  const handleIngredientChange = (ingredient, event) => {
     const { ingredients } = { ...state }
     if (event.target.checked) {
       ingredients.push(ingredient)
@@ -42,19 +84,18 @@ function Home(props) {
     setState({ ...state, ingredients })
   }
 
-  const loadRecipe = (recipeId) => {
-    props.loadRecipe(recipeId)
+  const handleRecipeClick = (recipeId) => {
+    setState({ ...state, selectedRecipeId: recipeId })
   }
 
-  const { term, ingredients } = state
   const { recipes, isLoading } = props
   return (
     <HomeWrapper>
       <Input
         autoFocus={true}
         fullWidth={true}
-        onChange={handleSearch}
-        value={term}
+        onChange={handleQueryChange}
+        value={state.term}
       />
       <div>
         <h3>Ingredients on hand</h3>
@@ -63,8 +104,8 @@ function Home(props) {
             key={ingredient}
             control={
               <Checkbox
-                checked={ingredients.includes(ingredient)}
-                onChange={handleIngredient.bind(this, ingredient)}
+                checked={state.ingredients.includes(ingredient)}
+                onChange={(event) => handleIngredientChange(ingredient, event)}
                 value={ingredient}
               />
             }
@@ -72,12 +113,12 @@ function Home(props) {
           />
         ))}
       </div>
-      <Button onClick={fetchSearch}>search</Button>
+      <Button onClick={handleSearchClick}>search</Button>
       <Divider />
       {recipes && (
         <List>
           {recipes.map((recipe) => (
-            <ListItem key={recipe.id} onClick={() => loadRecipe(recipe.id)}>
+            <ListItem className={classes.listItem} key={recipe.id} onClick={() => handleRecipeClick(recipe.id)}>
               <ListItemText primary={recipe.name} />
             </ListItem>
           ))}
