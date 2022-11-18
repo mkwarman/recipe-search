@@ -13,6 +13,6 @@ services:
     build: 
       context: ./frontend
       dockerfile: ./Dockerfile
-    image: mkwarman/zcc-frontend:0.1
+    image: mkwarman/zcc-frontend:0.2
     ports:
       - "3000:80"
