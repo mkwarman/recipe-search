@@ -1,4 +1,4 @@
-import React, { Component } from "react"
+import React, { useState, useEffect } from "react"
 import { connect } from "react-redux"
 import { bindActionCreators } from "redux"
 import { HomeWrapper } from "./styles"
@@ -16,81 +16,78 @@ import Recipe from "../Recipe"
 
 const ingredientList = ["flour", "sugar", "salt", "butter", "milk"]
 
-class Home extends Component {
-  constructor(props) {
-    super(props)
-    this.handleSearch = this.handleSearch.bind(this)
-    this.handleIngredient = this.handleIngredient.bind(this)
-    this.fetchSearch = this.fetchSearch.bind(this)
-    this.state = {
-      term: "",
-      ingredients: ["milk"],
-    }
+function Home(props) {
+  const [state, setState] = useState({
+    term: "",
+    ingredients: ["milk"],
+  })
+
+  const fetchSearch = () => {
+    props.searchRecipes(state.term, state.ingredients)
   }
-  fetchSearch() {
-    this.props.searchRecipes(this.state.term, this.state.ingredients)
-  }
-  handleSearch(event) {
+
+  const handleSearch = (event) => {
     const term = event.target.value
-    this.setState({ term })
+    setState({ ...state, term })
   }
-  handleIngredient(ingredient, event) {
-    const { ingredients } = { ...this.state }
+
+  const handleIngredient = (ingredient, event) => {
+    const { ingredients } = { ...state }
     if (event.target.checked) {
       ingredients.push(ingredient)
     } else {
       const foundIngredient = ingredients.indexOf(ingredient)
       ingredients.splice(foundIngredient, 1)
     }
-    this.setState({ ingredients })
+    setState({ ...state, ingredients })
   }
-  loadRecipe(recipeId) {
-    this.props.loadRecipe(recipeId)
+
+  const loadRecipe = (recipeId) => {
+    props.loadRecipe(recipeId)
   }
-  render() {
-    const { term, ingredients } = this.state
-    const { recipes, isLoading } = this.props
-    return (
-      <HomeWrapper>
-        <Input
-          autoFocus={true}
-          fullWidth={true}
-          onChange={this.handleSearch}
-          value={term}
-        />
-        <div>
-          <h3>Ingredients on hand</h3>
-          {ingredientList.map((ingredient) => (
-            <FormControlLabel
-              key={ingredient}
-              control={
-                <Checkbox
-                  checked={ingredients.includes(ingredient)}
-                  onChange={this.handleIngredient.bind(this, ingredient)}
-                  value={ingredient}
-                />
-              }
-              label={ingredient}
-            />
+
+  const { term, ingredients } = state
+  const { recipes, isLoading } = props
+  return (
+    <HomeWrapper>
+      <Input
+        autoFocus={true}
+        fullWidth={true}
+        onChange={handleSearch}
+        value={term}
+      />
+      <div>
+        <h3>Ingredients on hand</h3>
+        {ingredientList.map((ingredient) => (
+          <FormControlLabel
+            key={ingredient}
+            control={
+              <Checkbox
+                checked={ingredients.includes(ingredient)}
+                onChange={handleIngredient.bind(this, ingredient)}
+                value={ingredient}
+              />
+            }
+            label={ingredient}
+          />
+        ))}
+      </div>
+      <Button onClick={fetchSearch}>search</Button>
+      <Divider />
+      {recipes && (
+        <List>
+          {recipes.map((recipe) => (
+            <ListItem key={recipe.id} onClick={() => loadRecipe(recipe.id)}>
+              <ListItemText primary={recipe.name} />
+            </ListItem>
           ))}
-        </div>
-        <Button onClick={this.fetchSearch}>search</Button>
-        <Divider />
-        {recipes && (
-          <List>
-            {recipes.map((recipe) => (
-              <ListItem key={recipe.id} onClick={() => this.loadRecipe(recipe.id)}>
-                <ListItemText primary={recipe.name} />
-              </ListItem>
-            ))}
-          </List>
-        )}
-        {isLoading && <LinearProgress />}
-        <Divider />
-        <Recipe></Recipe>
-      </HomeWrapper>
-    )
-  }
+        </List>
+      )}
+      {isLoading && <LinearProgress />}
+      <Divider />
+      <Recipe></Recipe>
+    </HomeWrapper>
+  )
 }
 
 const mapStateToProps = (state) => {
